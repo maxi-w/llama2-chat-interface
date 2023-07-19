@@ -1,0 +1,2 @@
+gradio==3.37.0
+llama @ git+https://github.com/facebookresearch/llama@main
