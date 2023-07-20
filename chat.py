@@ -4,6 +4,18 @@ from llama import Llama
 from typing import Optional
 
 
+def history_to_dialog_format(chat_history: list[str]):
+    dialog = []
+    if len(chat_history) > 0:
+        for idx, message in enumerate(chat_history[0]):
+            role = "user" if idx % 2 == 0 else "assistant"
+            dialog.append({
+                "role": role,
+                "content": message,
+            })
+    return dialog
+
+
 def main(
     ckpt_dir: str,
     tokenizer_path: str,
@@ -20,19 +32,17 @@ def main(
         max_batch_size=max_batch_size,
     )
 
-    dialogs = [[]]
-
     def llama_response(message, history):
-        dialogs[0].append({"role": "user", "content": message})
+        dialog = history_to_dialog_format(history)
+        dialog.append({"role": "user", "content": message})
 
         results = generator.chat_completion(
-            dialogs,  # type: ignore
+            [dialog],  # type: ignore
             max_gen_len=max_gen_len,
             temperature=temperature,
             top_p=top_p,
         )
 
-        dialogs[0].append(results[-1]["generation"])
         return results[-1]['generation']['content']
 
     demo = gr.ChatInterface(
@@ -44,6 +54,7 @@ def main(
     )
 
     demo.launch()
+
 
 if __name__ == "__main__":
     fire.Fire(main)
